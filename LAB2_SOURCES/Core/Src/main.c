@@ -254,7 +254,7 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 int time = 50;
-int segment_stage = 0;
+int segment_stage = 1; // next time 7seg 2 will be on
 int interrupt_counter = -1;
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if (interrupt_counter <= 0) {
