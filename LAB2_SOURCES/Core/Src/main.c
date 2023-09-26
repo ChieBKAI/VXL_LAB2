@@ -253,7 +253,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-int time = 100;
+int time = 50;
 int segment_stage = 0;
 int interrupt_counter = -1;
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
@@ -269,6 +269,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 			HAL_GPIO_WritePin(EN1_GPIO_Port, EN1_Pin, 0);
 			segment_stage = 0;
 		}
+		HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin);
 		interrupt_counter = time;
 	}
 	interrupt_counter--;
