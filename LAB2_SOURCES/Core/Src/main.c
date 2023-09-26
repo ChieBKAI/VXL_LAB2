@@ -56,7 +56,36 @@ static void MX_TIM2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void display7SEG(int num) {
+    // Define the 7-segment patterns for each digit
+    const uint8_t segmentPatterns[] = {
+        0b11000000, // 0
+        0b11111001, // 1
+        0b10100100, // 2
+        0b10110000, // 3
+        0b10011001, // 4
+        0b10010010, // 5
+        0b10000010, // 6
+        0b11111000, // 7
+        0b10000000, // 8
+        0b10010000  // 9
+    };
 
+    // Ensure the input number is within the valid range (0-9)
+    if (num < 0 || num > 9) {
+        // Handle invalid input
+        return;
+    }
+
+    // Set the GPIO pins according to the 7-segment pattern for the digit
+    HAL_GPIO_WritePin(SEG_A_GPIO_Port, SEG_A_Pin, (segmentPatterns[num] >> 0) & 1);
+    HAL_GPIO_WritePin(SEG_B_GPIO_Port, SEG_B_Pin, (segmentPatterns[num] >> 1) & 1);
+    HAL_GPIO_WritePin(SEG_C_GPIO_Port, SEG_C_Pin, (segmentPatterns[num] >> 2) & 1);
+    HAL_GPIO_WritePin(SEG_D_GPIO_Port, SEG_D_Pin, (segmentPatterns[num] >> 3) & 1);
+    HAL_GPIO_WritePin(SEG_E_GPIO_Port, SEG_E_Pin, (segmentPatterns[num] >> 4) & 1);
+    HAL_GPIO_WritePin(SEG_F_GPIO_Port, SEG_F_Pin, (segmentPatterns[num] >> 5) & 1);
+    HAL_GPIO_WritePin(SEG_G_GPIO_Port, SEG_G_Pin, (segmentPatterns[num] >> 6) & 1);
+}
 /* USER CODE END 0 */
 
 /**
@@ -89,6 +118,8 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+  HAL_TIM_Base_Start_IT(&htim2);
+
 
   /* USER CODE END 2 */
 
@@ -194,21 +225,54 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(RED_LED_GPIO_Port, RED_LED_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LED_RED_Pin|EN1_Pin|EN2_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : RED_LED_Pin */
-  GPIO_InitStruct.Pin = RED_LED_Pin;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, SEG_A_Pin|SEG_B_Pin|SEG_C_Pin|SEG_D_Pin
+                          |SEG_E_Pin|SEG_F_Pin|SEG_G_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : LED_RED_Pin EN1_Pin EN2_Pin */
+  GPIO_InitStruct.Pin = LED_RED_Pin|EN1_Pin|EN2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(RED_LED_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : SEG_A_Pin SEG_B_Pin SEG_C_Pin SEG_D_Pin
+                           SEG_E_Pin SEG_F_Pin SEG_G_Pin */
+  GPIO_InitStruct.Pin = SEG_A_Pin|SEG_B_Pin|SEG_C_Pin|SEG_D_Pin
+                          |SEG_E_Pin|SEG_F_Pin|SEG_G_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 }
 
 /* USER CODE BEGIN 4 */
-
+int time = 100;
+int segment_stage = 0;
+int interrupt_counter = -1;
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+	if (interrupt_counter <= 0) {
+		if (segment_stage == 0) {
+			display7SEG(2);
+			HAL_GPIO_WritePin(EN2_GPIO_Port, EN2_Pin, 0); // turn on 7seg 2
+			HAL_GPIO_WritePin(EN1_GPIO_Port, EN1_Pin, 1);
+			segment_stage = 1;
+		} else {
+			display7SEG(1);
+			HAL_GPIO_WritePin(EN2_GPIO_Port, EN2_Pin, 1); // turn off 7seg 2
+			HAL_GPIO_WritePin(EN1_GPIO_Port, EN1_Pin, 0);
+			segment_stage = 0;
+		}
+		interrupt_counter = time;
+	}
+	interrupt_counter--;
+}
 /* USER CODE END 4 */
 
 /**
