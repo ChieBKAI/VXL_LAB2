@@ -316,7 +316,7 @@ int main(void)
   		  }
   		  updateMatrixBuffer();
   		  ////////////////////
-  		  setTimer1(5);
+  		  setTimer1(10);
   	  }
 
 
