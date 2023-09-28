@@ -1,5 +1,6 @@
 #MicroXplorer Configuration settings - do not modify
 File.Version=6
+GPIO.groupedBy=Group By Peripherals
 KeepUserPlacement=false
 Mcu.Family=STM32F1
 Mcu.IP0=NVIC
@@ -213,7 +214,7 @@ RCC.PLLMCOFreq_Value=4000000
 RCC.TimSysFreq_Value=8000000
 TIM2.IPParameters=Prescaler,Period
 TIM2.Period=9
-TIM2.Prescaler=7999
+TIM2.Prescaler=799
 VP_SYS_VS_ND.Mode=No_Debug
 VP_SYS_VS_ND.Signal=SYS_VS_ND
 VP_SYS_VS_Systick.Mode=SysTick

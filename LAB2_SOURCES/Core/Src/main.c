@@ -58,12 +58,19 @@ static void MX_TIM2_Init(void);
 /* USER CODE BEGIN 0 */
 int timer0_counter = 0;
 int timer0_flag = 0;
-int TIMER_CYCLE = 10;
+int timer1_counter = 0;
+int timer1_flag = 0;
+int TIMER_CYCLE = 1;
 
 void setTimer0(int duration) {
     timer0_counter = duration / TIMER_CYCLE;
     timer0_flag = 0;
 }
+void setTimer1(int duration) {
+    timer1_counter = duration / TIMER_CYCLE;
+    timer1_flag = 0;
+}
+
 
 void timer_run() {
     if (timer0_counter > 0) {
@@ -71,6 +78,12 @@ void timer_run() {
     }
     if (timer0_counter <= 0) {
         timer0_flag = 1;
+    }
+    if (timer1_counter > 0) {
+        timer1_counter--;
+    }
+    if (timer1_counter <= 0) {
+        timer1_flag = 1;
     }
 }
 
@@ -143,6 +156,80 @@ void update7SEG(int index) {
 		break;
 	}
 }
+
+
+
+void displayColumnLED(int data) {
+	HAL_GPIO_WritePin(ROW0_GPIO_Port, ROW0_Pin, ~(data >> 7) & 1);
+	HAL_GPIO_WritePin(ROW1_GPIO_Port, ROW1_Pin, ~(data >> 6) & 1);
+	HAL_GPIO_WritePin(ROW2_GPIO_Port, ROW2_Pin, ~(data >> 5) & 1);
+	HAL_GPIO_WritePin(ROW3_GPIO_Port, ROW3_Pin, ~(data >> 4) & 1);
+	HAL_GPIO_WritePin(ROW4_GPIO_Port, ROW4_Pin, ~(data >> 3) & 1);
+	HAL_GPIO_WritePin(ROW5_GPIO_Port, ROW5_Pin, ~(data >> 2) & 1);
+	HAL_GPIO_WritePin(ROW6_GPIO_Port, ROW6_Pin, ~(data >> 1) & 1);
+	HAL_GPIO_WritePin(ROW7_GPIO_Port, ROW7_Pin, ~(data >> 0) & 1);
+}
+void clearAllCol(void) {
+	HAL_GPIO_WritePin(ENM0_GPIO_Port, ENM0_Pin, 1);
+	HAL_GPIO_WritePin(ENM1_GPIO_Port, ENM1_Pin, 1);
+	HAL_GPIO_WritePin(ENM2_GPIO_Port, ENM2_Pin, 1);
+	HAL_GPIO_WritePin(ENM3_GPIO_Port, ENM3_Pin, 1);
+	HAL_GPIO_WritePin(ENM4_GPIO_Port, ENM4_Pin, 1);
+	HAL_GPIO_WritePin(ENM5_GPIO_Port, ENM5_Pin, 1);
+	HAL_GPIO_WritePin(ENM6_GPIO_Port, ENM6_Pin, 1);
+	HAL_GPIO_WritePin(ENM7_GPIO_Port, ENM7_Pin, 1);
+}
+
+const int MAX_LED_MATRIX = 8;
+uint8_t matrix_buffer[8] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+
+void updateLEDMatrix(int index) {
+    switch (index) {
+        case 0:
+        	clearAllCol();
+        	HAL_GPIO_WritePin(ENM0_GPIO_Port, ENM0_Pin, 0);
+        	displayColumnLED(matrix_buffer[0]);
+            break;
+        case 1:
+        	clearAllCol();
+        	HAL_GPIO_WritePin(ENM1_GPIO_Port, ENM1_Pin, 0);
+        	displayColumnLED(matrix_buffer[1]);
+            break;
+        case 2:
+        	clearAllCol();
+        	HAL_GPIO_WritePin(ENM2_GPIO_Port, ENM2_Pin, 0);
+        	displayColumnLED(matrix_buffer[2]);
+            break;
+        case 3:
+        	clearAllCol();
+        	HAL_GPIO_WritePin(ENM3_GPIO_Port, ENM3_Pin, 0);
+        	displayColumnLED(matrix_buffer[3]);
+            break;
+        case 4:
+        	clearAllCol();
+        	HAL_GPIO_WritePin(ENM4_GPIO_Port, ENM4_Pin, 0);
+        	displayColumnLED(matrix_buffer[4]);
+            break;
+        case 5:
+        	clearAllCol();
+        	HAL_GPIO_WritePin(ENM5_GPIO_Port, ENM5_Pin, 0);
+        	displayColumnLED(matrix_buffer[5]);
+            break;
+        case 6:
+        	clearAllCol();
+        	HAL_GPIO_WritePin(ENM6_GPIO_Port, ENM6_Pin, 0);
+        	displayColumnLED(matrix_buffer[6]);
+            break;
+        case 7:
+        	clearAllCol();
+        	HAL_GPIO_WritePin(ENM7_GPIO_Port, ENM7_Pin, 0);
+        	displayColumnLED(matrix_buffer[7]);
+            break;
+        default:
+            break;
+    }
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -190,13 +277,74 @@ int main(void)
 	  led_buffer[3] = minute % 10;
   }
 
+  void updateMatrixBuffer() {
+      // Define the hex values for the character "A"
+      const uint8_t letterA[8] = {
+    		  0x00, // 00011000
+    		  0x3F, // 00111100
+    		  0x7F, // 01100110
+    		  0xCC, // 11000011
+    		  0xCC, // 11000011
+    		  0x7F, // 11111111
+    		  0x3F, // 11000011
+    		  0x00  // 11000011
+
+
+      };
+
+      // Copy the hex values to the matrix_buffer
+      matrix_buffer[0] = letterA[0];
+      matrix_buffer[1] = letterA[1];
+      matrix_buffer[2] = letterA[2];
+      matrix_buffer[3] = letterA[3];
+      matrix_buffer[4] = letterA[4];
+      matrix_buffer[5] = letterA[5];
+      matrix_buffer[6] = letterA[6];
+      matrix_buffer[7] = letterA[7];
+  }
+  //////////////////////////////////////////////////////////////////////////
+  int index_led_matrix = 0;
   int index_led = 0;
   while (1)
-  {
-    /* USER CODE END WHILE */
+    {
+      /* USER CODE END WHILE */
+  	  if (timer1_flag == 1) {
+  		  updateLEDMatrix(index_led_matrix);
+  		  index_led_matrix++;
+  		  if (index_led_matrix > 7) {
+  			  index_led_matrix = 0;
+  		  }
+  		  updateMatrixBuffer();
+  		  ////////////////////
+  		  setTimer1(5);
+  	  }
 
-    /* USER CODE BEGIN 3 */
-  }
+
+  	  if (timer0_flag == 1) {
+  		  update7SEG(index_led);
+  		  index_led++;
+  		  if (index_led > 3) {
+  			  index_led = 0;
+  			  second++;
+  			  HAL_GPIO_TogglePin(DOT_LED_GPIO_Port, DOT_LED_Pin);
+  		  }
+  		  if (second >= 60) {
+  			  second = 0;
+  			  minute++;
+  		  }
+  		  if (minute >= 60) {
+  			  minute = 0;
+  			  hour++;
+  		  }
+  		  if (hour >= 24) {
+  			  hour = 0;
+  		  }
+  		  updateClockBuffer();
+  		  ///////////
+  		  setTimer0(250);
+  	  }
+      /* USER CODE BEGIN 3 */
+    }
   /* USER CODE END 3 */
 }
 
@@ -254,7 +402,7 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 7999;
+  htim2.Init.Prescaler = 799;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 9;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
