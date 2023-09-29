@@ -60,7 +60,7 @@ int timer0_counter = 0;
 int timer0_flag = 0;
 int timer1_counter = 0;
 int timer1_flag = 0;
-int TIMER_CYCLE = 1;
+int TIMER_CYCLE = 10;
 
 void setTimer0(int duration) {
     timer0_counter = duration / TIMER_CYCLE;
@@ -187,48 +187,83 @@ void updateLEDMatrix(int index) {
     switch (index) {
         case 0:
         	clearAllCol();
-        	HAL_GPIO_WritePin(ENM0_GPIO_Port, ENM0_Pin, 0);
         	displayColumnLED(matrix_buffer[0]);
+        	HAL_GPIO_WritePin(ENM0_GPIO_Port, ENM0_Pin, 0);
             break;
         case 1:
         	clearAllCol();
-        	HAL_GPIO_WritePin(ENM1_GPIO_Port, ENM1_Pin, 0);
         	displayColumnLED(matrix_buffer[1]);
+        	HAL_GPIO_WritePin(ENM1_GPIO_Port, ENM1_Pin, 0);
             break;
         case 2:
         	clearAllCol();
-        	HAL_GPIO_WritePin(ENM2_GPIO_Port, ENM2_Pin, 0);
         	displayColumnLED(matrix_buffer[2]);
+        	HAL_GPIO_WritePin(ENM2_GPIO_Port, ENM2_Pin, 0);
             break;
         case 3:
         	clearAllCol();
-        	HAL_GPIO_WritePin(ENM3_GPIO_Port, ENM3_Pin, 0);
         	displayColumnLED(matrix_buffer[3]);
+        	HAL_GPIO_WritePin(ENM3_GPIO_Port, ENM3_Pin, 0);
             break;
         case 4:
         	clearAllCol();
-        	HAL_GPIO_WritePin(ENM4_GPIO_Port, ENM4_Pin, 0);
         	displayColumnLED(matrix_buffer[4]);
+        	HAL_GPIO_WritePin(ENM4_GPIO_Port, ENM4_Pin, 0);
             break;
         case 5:
         	clearAllCol();
-        	HAL_GPIO_WritePin(ENM5_GPIO_Port, ENM5_Pin, 0);
         	displayColumnLED(matrix_buffer[5]);
+        	HAL_GPIO_WritePin(ENM5_GPIO_Port, ENM5_Pin, 0);
             break;
         case 6:
         	clearAllCol();
-        	HAL_GPIO_WritePin(ENM6_GPIO_Port, ENM6_Pin, 0);
         	displayColumnLED(matrix_buffer[6]);
+        	HAL_GPIO_WritePin(ENM6_GPIO_Port, ENM6_Pin, 0);
             break;
         case 7:
         	clearAllCol();
-        	HAL_GPIO_WritePin(ENM7_GPIO_Port, ENM7_Pin, 0);
         	displayColumnLED(matrix_buffer[7]);
+        	HAL_GPIO_WritePin(ENM7_GPIO_Port, ENM7_Pin, 0);
             break;
         default:
             break;
     }
 }
+
+int hour = 15, minute = 8, second = 50;
+void updateClockBuffer() {
+	  led_buffer[0] = hour / 10;
+	  led_buffer[1] = hour % 10;
+	  led_buffer[2] = minute / 10;
+	  led_buffer[3] = minute % 10;
+}
+
+void updateMatrixBuffer(int i) {
+    // Define the hex values for the character "A"
+    const uint8_t letterA[8] = {
+  		  0x00, // 00011000
+  		  0x3F, // 00111100
+  		  0x7F, // 01100110
+  		  0xCC, // 11000011
+  		  0xCC, // 11000011
+  		  0x7F, // 11111111
+  		  0x3F, // 11000011
+  		  0x00  // 11000011
+
+
+    };
+
+    // Copy the hex values to the matrix_buffer
+    matrix_buffer[(0)] = letterA[(0+i) % 8];
+    matrix_buffer[(1)] = letterA[(1+i) % 8];
+    matrix_buffer[(2)] = letterA[(2+i) % 8];
+    matrix_buffer[(3)] = letterA[(3+i) % 8];
+    matrix_buffer[(4)] = letterA[(4+i) % 8];
+    matrix_buffer[(5)] = letterA[(5+i) % 8];
+    matrix_buffer[(6)] = letterA[(6+i) % 8];
+    matrix_buffer[(7)] = letterA[(7+i) % 8];
+}
+
 
 /* USER CODE END 0 */
 
@@ -269,42 +304,9 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  int hour = 15, minute = 8, second = 50;
-  void updateClockBuffer() {
-	  led_buffer[0] = hour / 10;
-	  led_buffer[1] = hour % 10;
-	  led_buffer[2] = minute / 10;
-	  led_buffer[3] = minute % 10;
-  }
-
-  void updateMatrixBuffer() {
-      // Define the hex values for the character "A"
-      const uint8_t letterA[8] = {
-    		  0x00, // 00011000
-    		  0x3F, // 00111100
-    		  0x7F, // 01100110
-    		  0xCC, // 11000011
-    		  0xCC, // 11000011
-    		  0x7F, // 11111111
-    		  0x3F, // 11000011
-    		  0x00  // 11000011
-
-
-      };
-
-      // Copy the hex values to the matrix_buffer
-      matrix_buffer[0] = letterA[0];
-      matrix_buffer[1] = letterA[1];
-      matrix_buffer[2] = letterA[2];
-      matrix_buffer[3] = letterA[3];
-      matrix_buffer[4] = letterA[4];
-      matrix_buffer[5] = letterA[5];
-      matrix_buffer[6] = letterA[6];
-      matrix_buffer[7] = letterA[7];
-  }
-  //////////////////////////////////////////////////////////////////////////
   int index_led_matrix = 0;
   int index_led = 0;
+  int slide = 0;
   while (1)
     {
       /* USER CODE END WHILE */
@@ -314,15 +316,17 @@ int main(void)
   		  if (index_led_matrix > 7) {
   			  index_led_matrix = 0;
   		  }
-  		  updateMatrixBuffer();
+  		  updateMatrixBuffer(slide);
   		  ////////////////////
   		  setTimer1(10);
   	  }
 
 
   	  if (timer0_flag == 1) {
-  		  update7SEG(index_led);
-  		  index_led++;
+  		  slide++;
+  		  if (slide > 7) {
+  			  slide = 0;
+  		  }
   		  if (index_led > 3) {
   			  index_led = 0;
   			  second++;
@@ -340,6 +344,8 @@ int main(void)
   			  hour = 0;
   		  }
   		  updateClockBuffer();
+  		  update7SEG(index_led);
+  		  index_led++;
   		  ///////////
   		  setTimer0(250);
   	  }
@@ -402,7 +408,7 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 799;
+  htim2.Init.Prescaler = 7999;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 9;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
